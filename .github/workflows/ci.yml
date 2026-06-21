@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Instalar y Ejecutar
+      run: |
+        pip install selenium pytest pytest-cov pytest-html
+        pytest --cov=ecommerce-api --cov-report=xml --html=reporte.html --self-contained-html
