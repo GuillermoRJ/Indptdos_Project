@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Panel de citas — Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 460px; margin: 3rem auto; }
+    input, button { padding: .5rem; margin: .3rem 0; }
+    #error { color: #b00020; }
+    #mensaje { color: #16653f; font-weight: bold; }
+    li { margin: .2rem 0; }
+  </style>
+</head>
+<body>
+  <!-- Pantalla posterior al login. En una app real se llegaría aquí tras
+       autenticarse; en la demo se abre directamente. -->
+  <h1 id="titulo-panel">Panel de citas</h1>
+
+  <form id="form-cita" onsubmit="return false;">
+    <input id="fecha" placeholder="AAAA-MM-DD">
+    <button id="btn-agendar" onclick="agendar()">Agendar</button>
+  </form>
+
+  <p id="error" style="display:none;"></p>
+  <p id="mensaje" style="display:none;"></p>
+  <ul id="lista-citas"></ul>
+
+  <script>
+    function agendar() {
+      const fecha = document.getElementById("fecha").value.trim();
+      const error = document.getElementById("error");
+      const mensaje = document.getElementById("mensaje");
+      error.style.display = "none";
+      mensaje.style.display = "none";
+
+      // Retardo deliberado: obliga a usar esperas explícitas.
+      setTimeout(() => {
+        if (!fecha) {
+          error.textContent = "La fecha es obligatoria";
+          error.style.display = "block";
+          return;
+        }
+        const li = document.createElement("li");
+        li.textContent = "Cita: " + fecha;
+        document.getElementById("lista-citas").appendChild(li);
+        mensaje.textContent = "Cita agendada para " + fecha;
+        mensaje.style.display = "block";
+      }, 400);
+    }
+  </script>
+</body>
+</html>
