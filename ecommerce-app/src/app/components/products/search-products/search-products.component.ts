@@ -6,6 +6,7 @@ import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-search-products',
+  standalone: true,
   imports: [ReactiveFormsModule, AsyncPipe],
   templateUrl: './search-products.component.html',
   styleUrl: './search-products.component.css'

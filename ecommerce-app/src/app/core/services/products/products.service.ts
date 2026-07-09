@@ -20,11 +20,14 @@ export class ProductsService {
     return this.httpClient
       .get<ProductResponse>(this.baseUrl, { params: { page, limit } })
       .pipe(catchError((error) => throwError(() => new Error(error))));
+
+  }
+
+  getProductByID(id:string):Observable<Product>{
+    return this.httpClient.get<Product>(`${this.baseUrl}/${id}`);
   }
 
   searchProducts(searchConfig:filters):Observable<Product[]>{
-    
-
     let filters:filters ={
       q:searchConfig.q
     }

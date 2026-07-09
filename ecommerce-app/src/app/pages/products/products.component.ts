@@ -3,6 +3,7 @@ import { ProductsListComponent } from "../../components/products/products-list/p
 
 @Component({
   selector: 'app-products',
+  standalone: true,
   imports: [ProductsListComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css'
