@@ -9,7 +9,7 @@ class TestEcommerceE2E:
   def test_login_valid_credentials(self, driver):
     login_page = LoginPage(driver)
     login_page.load()
-    login_page.login("no@test.com", "no")
+    login_page.login("admin@ecommerce.com", "admin123")
     error_msg = login_page.get_error_message()
     assert len(error_msg) > 0, "Debería mostrarse un mensaje de error."
 
