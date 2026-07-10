@@ -4,14 +4,15 @@ from pages.home_page import HomePage
 
 class TestEcommerceE2E:
 
-  # --- ESCENARIOS BASE DE MEMO (Puntos 1, 2, 3) ---
-
-  def test_login_valid_credentials(self, driver):
+  def test_login_success(self, driver):
     login_page = LoginPage(driver)
     login_page.load()
-    login_page.login("admin@ecommerce.com", "admin123")
-    error_msg = login_page.get_error_message()
-    assert len(error_msg) > 0, "Debería mostrarse un mensaje de error."
+    login_page.login(
+      "admin@ecommerce.com",
+      "adminpassword"
+    )
+    home_page = HomePage(driver)
+    assert driver.current_url == home_page.URL or "dashboard" in driver.current_url or "login" not in driver.current_url
 
   def test_login_invalid_credentials(self, driver):
     login_page = LoginPage(driver)
@@ -25,7 +26,7 @@ class TestEcommerceE2E:
     ("jorge@test.com", "", "La contraseña es requerida"),
     ("usuario_invalido", "pass", "incorrectas")
   ])
-  def test_login_validation_data_driven(self, driver, username, password):
+  def test_login_validation_data_driven(self, driver, username, password, expected_error):
     login_page = LoginPage(driver)
     login_page.load()
     login_page.login(username, password)
