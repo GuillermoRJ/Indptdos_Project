@@ -1,13 +1,13 @@
-import Order from '../models/order.js';
-import errorHandler from '../middlewares/errorHandler.js';
+import Order from "../models/order.js";
+import errorHandler from "../middlewares/errorHandler.js";
 
-async function getOrders(req, res) {
+async function getOrders(req, res, next) {
   try {
     const orders = await Order.find()
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod')
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod")
       .sort({ status: 1 });
     res.json(orders);
   } catch (error) {
@@ -15,16 +15,16 @@ async function getOrders(req, res) {
   }
 }
 
-async function getOrderById(req, res) {
+async function getOrderById(req, res, next) {
   try {
     const id = req.params.id;
     const order = await Order.findById(id)
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod');
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod");
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
     res.json(order);
   } catch (error) {
@@ -32,18 +32,18 @@ async function getOrderById(req, res) {
   }
 }
 
-async function getOrdersByUser(req, res) {
+async function getOrdersByUser(req, res, next) {
   try {
     const userId = req.params.userId;
     const orders = await Order.find({ user: userId })
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod')
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod")
       .sort({ status: 1 });
 
     if (orders.length === 0) {
-      return res.status(404).json({ message: 'No orders found for this user' });
+      return res.status(404).json({ message: "No orders found for this user" });
     }
     res.json(orders);
   } catch (error) {
@@ -51,35 +51,52 @@ async function getOrdersByUser(req, res) {
   }
 }
 
-async function createOrder(req, res) {
+async function createOrder(req, res, next) {
   try {
     const {
       user,
       products,
       shippingAddress,
       paymentMethod,
-      shippingCost = 0
+      shippingCost = 0,
     } = req.body;
 
     // Validaciones básicas
-    if (!user || !products || !Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({ error: 'User and products array are required' });
+    if (
+      !user ||
+      !products ||
+      !Array.isArray(products) ||
+      products.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ error: "User and products array are required" });
     }
     if (!shippingAddress || !paymentMethod) {
-      return res.status(400).json({ error: 'Shipping address and payment method are required' });
+      return res
+        .status(400)
+        .json({ error: "Shipping address and payment method are required" });
     }
 
     // Validar estructura de productos
     for (const item of products) {
-      if (!item.productId || !item.quantity || !item.price || item.quantity < 1) {
+      if (
+        !item.productId ||
+        !item.quantity ||
+        !item.price ||
+        item.quantity < 1
+      ) {
         return res.status(400).json({
-          error: 'Each product must have productId, quantity >= 1, and price'
+          error: "Each product must have productId, quantity >= 1, and price",
         });
       }
     }
 
     // Calcular precio total
-    const subtotal = products.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const subtotal = products.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
     const totalPrice = subtotal + shippingCost;
 
     const newOrder = await Order.create({
@@ -89,14 +106,14 @@ async function createOrder(req, res) {
       paymentMethod,
       shippingCost,
       totalPrice,
-      status: 'pending',
-      paymentStatus: 'pending'
+      status: "pending",
+      paymentStatus: "pending",
     });
 
-    await newOrder.populate('user');
-    await newOrder.populate('products.productId');
-    await newOrder.populate('shippingAddress');
-    await newOrder.populate('paymentMethod');
+    await newOrder.populate("user");
+    await newOrder.populate("products.productId");
+    await newOrder.populate("shippingAddress");
+    await newOrder.populate("paymentMethod");
 
     res.status(201).json(newOrder);
   } catch (error) {
@@ -104,13 +121,13 @@ async function createOrder(req, res) {
   }
 }
 
-async function updateOrder(req, res) {
+async function updateOrder(req, res, next) {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
     // Solo permitir actualizar ciertos campos
-    const allowedFields = ['status', 'paymentStatus', 'shippingCost'];
+    const allowedFields = ["status", "paymentStatus", "shippingCost"];
     const filteredUpdate = {};
 
     for (const field of allowedFields) {
@@ -123,59 +140,60 @@ async function updateOrder(req, res) {
     if (filteredUpdate.shippingCost !== undefined) {
       const order = await Order.findById(id);
       if (order) {
-        const subtotal = order.products.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const subtotal = order.products.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0
+        );
         filteredUpdate.totalPrice = subtotal + filteredUpdate.shippingCost;
       }
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      filteredUpdate,
-      { new: true }
-    )
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod');
+    const updatedOrder = await Order.findByIdAndUpdate(id, filteredUpdate, {
+      new: true,
+    })
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod");
 
     if (updatedOrder) {
       return res.status(200).json(updatedOrder);
     } else {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
   } catch (error) {
     next(error);
   }
 }
 
-async function cancelOrder(req, res) {
+async function cancelOrder(req, res, next) {
   try {
     const { id } = req.params;
 
     const order = await Order.findById(id);
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
 
     // Solo permitir cancelar si el estado lo permite
-    if (order.status === 'delivered' || order.status === 'cancelled') {
+    if (order.status === "delivered" || order.status === "cancelled") {
       return res.status(400).json({
-        message: 'Cannot cancel order with status: ' + order.status
+        message: "Cannot cancel order with status: " + order.status,
       });
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
       {
-        status: 'cancelled',
-        paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : 'failed'
+        status: "cancelled",
+        paymentStatus: order.paymentStatus === "paid" ? "refunded" : "failed",
       },
       { new: true }
     )
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod');
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod");
 
     res.status(200).json(updatedOrder);
   } catch (error) {
@@ -183,15 +201,21 @@ async function cancelOrder(req, res) {
   }
 }
 
-async function updateOrderStatus(req, res) {
+async function updateOrderStatus(req, res, next) {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
-        error: 'Invalid status. Valid statuses: ' + validStatuses.join(', ')
+        error: "Invalid status. Valid statuses: " + validStatuses.join(", "),
       });
     }
 
@@ -200,30 +224,32 @@ async function updateOrderStatus(req, res) {
       { status },
       { new: true }
     )
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod');
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod");
 
     if (updatedOrder) {
       return res.status(200).json(updatedOrder);
     } else {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
   } catch (error) {
     next(error);
   }
 }
 
-async function updatePaymentStatus(req, res) {
+async function updatePaymentStatus(req, res, next) {
   try {
     const { id } = req.params;
     const { paymentStatus } = req.body;
 
-    const validPaymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
+    const validPaymentStatuses = ["pending", "paid", "failed", "refunded"];
     if (!validPaymentStatuses.includes(paymentStatus)) {
       return res.status(400).json({
-        error: 'Invalid payment status. Valid statuses: ' + validPaymentStatuses.join(', ')
+        error:
+          "Invalid payment status. Valid statuses: " +
+          validPaymentStatuses.join(", "),
       });
     }
 
@@ -232,34 +258,34 @@ async function updatePaymentStatus(req, res) {
       { paymentStatus },
       { new: true }
     )
-      .populate('user')
-      .populate('products.productId')
-      .populate('shippingAddress')
-      .populate('paymentMethod');
+      .populate("user")
+      .populate("products.productId")
+      .populate("shippingAddress")
+      .populate("paymentMethod");
 
     if (updatedOrder) {
       return res.status(200).json(updatedOrder);
     } else {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
   } catch (error) {
     next(error);
   }
 }
 
-async function deleteOrder(req, res) {
+async function deleteOrder(req, res, next) {
   try {
     const { id } = req.params;
 
     const order = await Order.findById(id);
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
 
     // Solo permitir eliminar órdenes canceladas
-    if (order.status !== 'cancelled') {
+    if (order.status !== "cancelled") {
       return res.status(400).json({
-        message: 'Only cancelled orders can be deleted'
+        message: "Only cancelled orders can be deleted",
       });
     }
 

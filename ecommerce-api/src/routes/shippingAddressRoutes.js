@@ -10,7 +10,7 @@ import {
   setDefaultAddress,
   deleteShippingAddress
 } from '../controllers/shippingAddressController.js';
-import authMiddleware from '../middlewares/auth.js'; // Middleware de autenticación
+import authMiddleware from '../middlewares/authMiddleware.js'; // Middleware de autenticación
 
 const router = express.Router();
 
